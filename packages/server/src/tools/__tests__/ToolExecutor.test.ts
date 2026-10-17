@@ -196,6 +196,7 @@ async function createOfficeFixture() {
     const createTask = jest.spyOn(MemoryStore.prototype, 'createTask').mockResolvedValue(1);
     const complete = jest.spyOn(OllamaAdapter.prototype, 'complete').mockResolvedValue(idleDecision);
     const room = new OfficeRoom();
+    room.autoDispose = false;
     const messages = jest.spyOn(room, 'onMessage');
     jest.spyOn(room, 'setSimulationInterval').mockImplementation(() => {});
     jest.spyOn(room, 'broadcast').mockImplementation(() => {});
