@@ -10,7 +10,6 @@ export interface ToolResult {
 }
 
 export class ToolExecutor {
-    private readonly parallelSessionId = randomUUID();
     private tavilyClient: TavilyClient | null = null;
 
     private getTavilyClient(): TavilyClient | null {
@@ -23,12 +22,12 @@ export class ToolExecutor {
         return null;
     }
 
-    async execute(toolName: string, params: any, options: { signal?: AbortSignal } = {}): Promise<ToolResult> {
+    async execute(toolName: string, params: any, options: { signal?: AbortSignal; taskId?: string } = {}): Promise<ToolResult> {
         switch (toolName) {
             case 'code_execute':
                 return this.executeCode(params.code, params.language || 'javascript');
             case 'web_search':
-                return this.webSearch(params?.query, options.signal);
+                return this.webSearch(params?.query, options.signal, options.taskId);
             case 'write_note':
                 return this.writeNote(params.content);
             case 'read_file':
@@ -70,7 +69,7 @@ export class ToolExecutor {
         });
     }
 
-    private async webSearch(query: string, signal?: AbortSignal): Promise<ToolResult> {
+    private async webSearch(query: string, signal?: AbortSignal, taskId?: string): Promise<ToolResult> {
         const provider = process.env.WEB_SEARCH_PROVIDER?.trim().toLowerCase();
         if (provider === 'none') {
             return { success: false, output: '', error: 'Web search is disabled.' };
@@ -83,7 +82,7 @@ export class ToolExecutor {
         }
         if (provider === 'parallel') {
             try {
-                return { success: true, output: await searchParallel(query, this.parallelSessionId, signal) };
+                return { success: true, output: await searchParallel(query, taskId ?? randomUUID(), signal) };
             } catch (error: unknown) {
                 return { success: false, output: '', error: `Parallel search failed: ${error instanceof Error ? error.message : String(error)}` };
             }
